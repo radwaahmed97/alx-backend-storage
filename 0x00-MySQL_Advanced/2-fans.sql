@@ -1,0 +1,11 @@
+-- SQL SCRIPT THAT RANKS COUNTRY ORIGINS OF BANDS
+-- ORDERED BY THE NUMBER OF (NON-UNIQUE) FANS
+SELECT
+    origin,
+    nb_fans
+WHERE
+    nb_fans = SUM(fans)
+GROUP BY
+    origin
+ORDER BY
+    nb_fans DESC;
