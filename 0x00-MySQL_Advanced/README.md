@@ -1,3 +1,2 @@
-# alx-backend-storage
-repository for advanced mysql projects
+# repository for advanced mysql project
 README file for this project
