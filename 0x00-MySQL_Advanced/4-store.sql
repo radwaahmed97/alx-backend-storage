@@ -1,2 +1,5 @@
 -- SQL SCRIPT THAT CREATES A TRIGGER THAT DECREASES THE QUANTITY OF AN ITEM AFTER ADDING A NEW ORDER.
-CREATE TRIGGER decrease_quantity AFTER INSERT ON orders FOR EACH ROW BEGIN UPDATE items SET quantity = quantity - 1 WHERE name = NEW.item_name; END;
+CREATE TRIGGER order_decrease AFTER INSERT ON orders
+FOR EACH ROW UPDATE items
+SET quantity = quantity - NEW.number
+WHERE name = NEW.item_name;
