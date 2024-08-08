@@ -1,11 +1,22 @@
--- SQL SCRIPT THAT CREATES A STORED PROCEDURE COMPUTEAVERAGESCOREFORUSER THAT COMPUTES AND STORE THE AVERAGE SCORE FOR A STUDENT. NOTE: AN AVERAGE SCORE CAN BE A DECIMAL
+-- Creates a stored procedure ComputeAverageScoreForUser
 DROP PROCEDURE IF EXISTS ComputeAverageScoreForUser;
-DELIMETER $$
-CREATE PROCEDURE ComputeAverageScoreForUser(IN user_id INT)
+DELIMITER $$
+CREATE PROCEDURE ComputeAverageScoreForUser (user_id INT)
 BEGIN
-    DECLARE average_score FLOAT;
-    SET average_score = (SELECT AVG(score) FROM correction AS C WHERE C.user_id=user_id);
-    UPDATE users SET average_score = average_score WHERE id=user_id;
-END
-$$
+    DECLARE total_score INT DEFAULT 0;
+    DECLARE projects_count INT DEFAULT 0;
+
+    SELECT SUM(score)
+        INTO total_score
+        FROM corrections
+        WHERE corrections.user_id = user_id;
+    SELECT COUNT(*)
+        INTO projects_count
+        FROM corrections
+        WHERE corrections.user_id = user_id;
+
+    UPDATE users
+        SET users.average_score = IF(projects_count = 0, 0, total_score / projects_count)
+        WHERE users.id = user_id;
+END $$
 DELIMITER ;
