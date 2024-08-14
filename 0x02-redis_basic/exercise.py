@@ -11,11 +11,29 @@ from functools import wraps
 import uuid
 
 
+def count_calls(method: Callable) -> Callable:
+    """
+    Count the number of times a method is called
+    """
+    key = method.__qualname__
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """
+        Wrapper function
+        """
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 class Cache:
     def __init__(self):
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
         Store the input data in Redis using the following
