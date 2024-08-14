@@ -1,37 +1,36 @@
 #!/usr/bin/env python3
-"""get_page function (prototype: def get_page(url: str) -> str:)"""
-
-import redisplay
-from functools import wraps
+"""
+web cache and tracker
+"""
 import requests
+import redis
+from functools import wraps
 
-r = redis.Redis()
+store = redis.Redis()
 
 
 def count_url_access(method):
-    """ return how many times a URL is accessed """
+    """ Decorator counting how many times
+    a URL is accessed """
     @wraps(method)
     def wrapper(url):
-        cach_key = "cached:" + url
-        cach_data = r.get(cach_key)
-        if cach_data:
-            return cach_data.decode("utf-8")
+        cached_key = "cached:" + url
+        cached_data = store.get(cached_key)
+        if cached_data:
+            return cached_data.decode("utf-8")
 
         count_key = "count:" + url
         html = method(url)
 
-        r.incr(count_key)
-        r.set(cach_key, html)
-        r.expire(cach_key, 10)
+        store.incr(count_key)
+        store.set(cached_key, html)
+        store.expire(cached_key, 10)
         return html
     return wrapper
 
 
 @count_url_access
 def get_page(url: str) -> str:
-    """
-    uses the requests module to obtain the HTML content of a
-    particular URL and returns it.
-    """
-    return_url = requests.get(url)
-    return return_url.text
+    """ Returns HTML content of a url """
+    res = requests.get(url)
+    return res.text
