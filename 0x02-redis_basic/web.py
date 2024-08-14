@@ -29,3 +29,7 @@ def tracker_decorator(method: Callable) -> Callable:
 def get_page(url: str) -> str:
     """get page content"""
     return requests.get(url).text
+
+
+if __name__ == "__main__":
+    get_page('http://slowwly.robertomurray.co.uk')
