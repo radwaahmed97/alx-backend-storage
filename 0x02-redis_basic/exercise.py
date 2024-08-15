@@ -8,7 +8,7 @@ from functools import wraps
 
 
 def count_calls(method: Callable) -> Callable:
-    """decorator takes single method Callable argument and returns a Callable"""
+    """decorator takes single method Callable argument and returns Callable"""
     key = method.__qualname__
 
     @wraps(method)
