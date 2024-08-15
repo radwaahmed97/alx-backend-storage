@@ -5,14 +5,15 @@
 import redis
 import requests
 from functools import wraps
+from typing import Callable
 
 r = redis.Redis()
 
 
-def counting_Access_decorator(method):
+def counting_Access_decorator(method: Callable) -> Callable:
     """decorator for get_page function"""
     @wraps(method)
-    def wrapper(url):
+    def wrapper(url) -> str:
         """wrapper function"""
         key = "cached:" + url
         cached_value = r.get(key)
