@@ -1,36 +1,39 @@
 #!/usr/bin/env python3
-""" geting page via url given and return count if access trials"""
+"""
+web cache and tracker
+"""
 import requests
 import redis
 from functools import wraps
 
-r = redis.Redis()
+store = redis.Redis()
 
 
-def cache_page(func):
-    """decorator for counting access number"""
-    @wraps(func)
-    def wrapper(url: str) -> str:
-        """wrapper method"""
-        cache_key = f"page:{url}"
-        count_key = f"count:{url}"
+def count_url_access(method):
+    """ Decorator counting how many times
+    a URL is accessed """
+    @wraps(method)
+    def wrapper(url):
+        cached_key = "cached:" + url
+        cached_data = store.get(cached_key)
+        if cached_data:
+            return cached_data.decode("utf-8")
 
-        r.incr(count_key)
-        cached_page = r.get(cache_key)
-        if cached_page:
-            print("Returning cached content")
-            return cached_page.decode('utf-8')
-        content = func(url)
-        r.setex(cache_key, 10, content)
-        return content
+        count_key = "count:" + url
+        html = method(url)
+
+        store.incr(count_key)
+        store.set(cached_key, html)
+        store.expire(cached_key, 10)
+        return html
     return wrapper
 
 
-@cache_page
+@count_url_access
 def get_page(url: str) -> str:
-    """method to get html of page via url"""
-    response = requests.get(url)
-    return response.text
+    """ Returns HTML content of a url """
+    res = requests.get(url)
+    return res.text
 
 
 if __name__ == "__main__":
