@@ -1,36 +1,38 @@
 #!/usr/bin/env python3
-"""
-Caching request module
-"""
-import redis
+""" getting page via url given and return count if access trials"""
 import requests
+import redis
 from functools import wraps
-from typing import Callable
+
+r = redis.Redis()
 
 
-def track_get_page(fn: Callable) -> Callable:
-    """ Decorator for get_page
-    """
-    @wraps(fn)
+def cache_page(func):
+    """decorator for counting access number"""
+    @wraps(func)
     def wrapper(url: str) -> str:
-        """ Wrapper that:
-            - check whether a url's data is cached
-            - tracks how many times get_page is called
-        """
-        client = redis.Redis()
-        client.incr(f'count:{url}')
-        cached_page = client.get(f'{url}')
+        """wrapper method"""
+        cache_key = f"page:{url}"
+        count_key = f"count:{url}"
+
+        r.incr(count_key)
+        cached_page = r.get(cache_key)
         if cached_page:
+            print("Returning cached content")
             return cached_page.decode('utf-8')
-        response = fn(url)
-        client.set(f'{url}', response, 10)
-        return response
+        content = func(url)
+        r.setex(cache_key, 10, content)
+        return content
     return wrapper
 
 
-@track_get_page
+@cache_page
 def get_page(url: str) -> str:
-    """ Makes a http request to a given endpoint
-    """
+    """method to get html of page via url"""
     response = requests.get(url)
     return response.text
+
+
+if __name__ == "__main__":
+    url = "http://slowwly.robertomurray.co.uk"
+    print(get_page(url))
