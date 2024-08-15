@@ -1,41 +1,40 @@
 #!/usr/bin/env python3
-"""web module for caching web content and counting access for given url"""
-
-
-import redis
+""" geting page via url given and return count if access trials"""
 import requests
+import redis
 from functools import wraps
-from typing import Callable
 
 r = redis.Redis()
 
 
-def counting_Access_decorator(method: Callable) -> Callable:
-    """decorator for get_page function"""
-    @wraps(method)
-    def wrapper(url) -> str:
-        """wrapper function"""
-        key = "cached:" + url
-        cached_value = r.get(key)
-        if cached_value:
-            return cached_value.decode("utf-8")
+def cache_page(func):
+    """decorator for counting access number"""
+    @wraps(func)
+    def wrapper(url: str) -> str:
+        """wrapper method"""
+        cache_key = f"page:{url}"
+        count_key = f"count:{url}"
 
-        key_count = "count:" + url
-        html_content = method(url)
-
-        r.incr(key_count)
-        r.set(key, html_content, ex=10)
-        r.expire(key, 10)
-        return html_content
+        r.incr(count_key)
+        cached_page = r.get(cache_key)
+        if cached_page:
+            print("Returning cached content")
+            return cached_page.decode('utf-8')
+        content = func(url)
+        r.setex(cache_key, 10, content)
+        return content
     return wrapper
 
 
-@counting_Access_decorator
+@cache_page
 def get_page(url: str) -> str:
-    """get HTML content of a particular url"""
-    res = requests.get(url)
-    return res.text
+    """method to get html of page via url"""
+    response = requests.get(url)
+    return response.text
 
 
 if __name__ == "__main__":
-    get_page('http://slowwly.robertomurray.co.uk')
+    url = "http://slowwly.robertomurray.co.uk"
+    print(get_page(url))
+    print(get_page(url))
+    print(get_page(url))
