@@ -34,7 +34,4 @@ def get_page(url: str) -> str:
 
 
 if __name__ == "__main__":
-    url = "http://www.google.com"
-    print(get_page(url))
-    print(get_page(url))
-    print(get_page(url))
+    print(get_page("http://slowwly.robertomurray.co.uk"))
